@@ -12,7 +12,7 @@ from .strategy import Strategy
 from autoremovetorrents.torrent import Torrent
 
 class Task(object):
-    def __init__(self, name, conf, remove_torrents = True):
+    def __init__(self, name, conf, remove_torrents = True, enable_soft_remove = False):
         # Logger
         self._logger = logger.Logger.register(__name__)
 
@@ -35,6 +35,7 @@ class Task(object):
         self._username = conf['username'] if 'username' in conf else ''
         self._password = conf['password'] if 'password' in conf else ''
         self._enabled_remove = remove_torrents
+        self._enable_soft_remove = enable_soft_remove
         self._delete_data = conf['delete_data'] if 'delete_data' in conf else False
         self._strategies = conf['strategies'] if 'strategies' in conf else []
 
@@ -143,7 +144,10 @@ class Task(object):
         self._apply_strategies()
         if self._enabled_remove:
             self._remove_torrents(self._remove, self._delete_data)
-            self._remove_torrents(self._soft_remove, False)
+            if self._enable_soft_remove:
+                self._remove_torrents(self._soft_remove, False)
+            elif len(self._soft_remove) > 0:
+                self._logger.info('%d torrent has not deleted, because of the enable_soft_remove is OFF.', len(self._soft_remove))
 
     # Get remaining torrents (for tester)
     def get_remaining_torrents(self):
